@@ -1,0 +1,3 @@
+[submodule "vrchatapi-python"]
+	path = libs/vrchatapi-python
+	url = https://github.com/vrchatapi/vrchatapi-python.git
