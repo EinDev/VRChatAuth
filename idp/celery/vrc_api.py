@@ -6,25 +6,28 @@ from typing import Union
 from flask import Flask
 from uuid import UUID
 
+import pyotp
 import vrchatapi
-from vrchatapi import LimitedUser
+from vrchatapi import LimitedUser, TwoFactorAuthCode
 from vrchatapi.api import authentication_api, friends_api, users_api, invite_api, groups_api
 from vrchatapi.exceptions import UnauthorizedException
 
 
 class VRCAPI:
-    def __init__(self, username, password, group_id, cookie_file):
+    def __init__(self, username, password, group_id, mfa_code):
         configuration = vrchatapi.Configuration(
             username=username,
             password=password
         )
         api_client = vrchatapi.ApiClient(configuration)
+        cookie_file = "vrc_api.cookie"
         api_client.rest_client.cookie_jar = MozillaCookieJar(cookie_file)
         if os.path.isfile(cookie_file):
             api_client.rest_client.cookie_jar.load()
 
         # Set our User-Agent as per VRChat Usage Policy
         api_client.user_agent = "vrc_saml.py/1.0 vrc_saml.py@ein.dev"
+        self.mfa_token = mfa_code
         self.auth_api = authentication_api.AuthenticationApi(api_client)
         self.login(api_client)
         self.group_id = group_id
@@ -33,15 +36,20 @@ class VRCAPI:
         self.invite_a = invite_api.InviteApi(api_client)
         self.groups_a = groups_api.GroupsApi(api_client)
 
+    def get_mfa_token(self) -> str:
+        totp = pyotp.TOTP(self.mfa_token)
+        return totp.now()
+
     def login(self, api_client):
         try:
             # Step 3. Calling getCurrentUser on Authentication API logs you in if the user isn't already logged in.
             current_user = self.auth_api.get_current_user()
         except UnauthorizedException as e:
             if e.status == 200:
-                if "Email 2 Factor Authentication" in e.reason or "2 Factor Authentication" in e.reason:
-                    print("MFA required, unable to log in")
-                    return
+                if "2 Factor Authentication" in e.reason:
+                    self.auth_api.verify2_fa(two_factor_auth_code=TwoFactorAuthCode(self.get_mfa_token()))
+                else:
+                    raise Exception("Unknown error: " + e.reason)
                 current_user = self.auth_api.get_current_user()
             else:
                 raise e
@@ -103,6 +111,6 @@ class VRCAPI:
 
 def vrc_init_app(app: Flask) -> VRCAPI:
     cfg = app.config["VRC"]
-    vrc_api = VRCAPI(cfg.get('USERNAME'), cfg.get('PASSWORD'), cfg.get('GROUP_ID'), cfg.get('COOKIE_FILE'))
+    vrc_api = VRCAPI(cfg.get('USERNAME'), cfg.get('PASSWORD'), cfg.get('GROUP_ID'), cfg.get('MFA_CODE'))
     app.extensions["vrc"] = vrc_api
     return vrc_api

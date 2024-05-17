@@ -1,0 +1,70 @@
+diff --git a/vrchatapi/api/groups_api.py b/vrchatapi/api/groups_api.py
+index 6d6c3579..cfb8f4fe 100644
+--- a/vrchatapi/api/groups_api.py
++++ b/vrchatapi/api/groups_api.py
+@@ -929,7 +929,7 @@ class GroupsApi(object):
+         }
+ 
+         return self.api_client.call_api(
+-            '/groups/{groupId}/announcement', 'POST',
++            '/groups/{groupId}/posts', 'POST',
+             path_params,
+             query_params,
+             header_params,
+@@ -1542,7 +1542,7 @@ class GroupsApi(object):
+             collection_formats=collection_formats,
+             _request_auth=local_var_params.get('_request_auth'))
+ 
+-    def delete_group_announcement(self, group_id, **kwargs):  # noqa: E501
++    def delete_group_announcement(self, group_id, post_id, **kwargs):  # noqa: E501
+         """Delete Group Announcement  # noqa: E501
+ 
+         Deletes the announcement for a Group.  # noqa: E501
+@@ -1570,9 +1570,9 @@ class GroupsApi(object):
+         :rtype: Success
+         """
+         kwargs['_return_http_data_only'] = True
+-        return self.delete_group_announcement_with_http_info(group_id, **kwargs)  # noqa: E501
++        return self.delete_group_announcement_with_http_info(group_id, post_id, **kwargs)  # noqa: E501
+ 
+-    def delete_group_announcement_with_http_info(self, group_id, **kwargs):  # noqa: E501
++    def delete_group_announcement_with_http_info(self, group_id, post_id, **kwargs):  # noqa: E501
+         """Delete Group Announcement  # noqa: E501
+ 
+         Deletes the announcement for a Group.  # noqa: E501
+@@ -1611,7 +1611,8 @@ class GroupsApi(object):
+         local_var_params = locals()
+ 
+         all_params = [
+-            'group_id'
++            'group_id',
++            'post_id'
+         ]
+         all_params.extend(
+             [
+@@ -1636,12 +1637,16 @@ class GroupsApi(object):
+         # verify the required parameter 'group_id' is set
+         if self.api_client.client_side_validation and local_var_params.get('group_id') is None:  # noqa: E501
+             raise ApiValueError("Missing the required parameter `group_id` when calling `delete_group_announcement`")  # noqa: E501
++        if self.api_client.client_side_validation and local_var_params.get('post_id') is None:  # noqa: E501
++            raise ApiValueError("Missing the required parameter `post_id` when calling `delete_group_announcement`")  # noqa: E501
+ 
+         collection_formats = {}
+ 
+         path_params = {}
+         if 'group_id' in local_var_params:
+             path_params['groupId'] = local_var_params['group_id']  # noqa: E501
++        if 'post_id' in local_var_params:
++            path_params['postId'] = local_var_params['post_id']  # noqa: E501
+ 
+         query_params = []
+ 
+@@ -1665,7 +1670,7 @@ class GroupsApi(object):
+         }
+ 
+         return self.api_client.call_api(
+-            '/groups/{groupId}/announcement', 'DELETE',
++            '/groups/{groupId}/posts/{postId}', 'DELETE',
+             path_params,
+             query_params,
+             header_params,
