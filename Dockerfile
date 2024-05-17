@@ -1,3 +1,9 @@
+FROM alpine/git:latest as libs
+
+COPY libs/vrchatapi-python vrchatapi-python
+COPY patches patches
+RUN git apply --directory vrchatapi-python --ignore-space-change patches/*
+
 FROM python:3.9-alpine as base
 
 RUN pip install --upgrade pip
@@ -11,7 +17,7 @@ RUN pip install --user -r requirements.txt
 
 ENV PATH="/home/worker/.local/bin:${PATH}"
 
-COPY --chown=worker:worker libs/vrchatapi-python vrchatapi-python
+COPY --from=libs --chown=worker:worker /git/vrchatapi-python vrchatapi-python
 RUN pip install --user -e vrchatapi-python
 
 COPY idp idp
