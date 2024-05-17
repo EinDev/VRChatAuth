@@ -4,7 +4,7 @@ COPY libs/vrchatapi-python vrchatapi-python
 COPY patches patches
 RUN git apply --directory vrchatapi-python --ignore-space-change patches/*
 
-FROM python:3.9-alpine as base
+FROM python:3.12-alpine as base
 
 RUN pip install --upgrade pip
 
