@@ -1,0 +1,84 @@
+version: "3"
+
+x-auth-service: &auth-service
+  depends_on: [ redis ]
+  volumes:
+    - ./data/auth/instance:/home/worker/instance
+
+x-celery-service: &celery-service
+  <<: *auth-service
+  env_file:
+      - .vrc.env
+
+services:
+  redis:
+    image: redis:7.2-alpine
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./data/redis:/data
+  celery_worker:
+    <<: *celery-service
+    build:
+      context: .
+      target: celery_worker
+#  celery_beat:
+#    <<: *celery-service
+#    build:
+#      context: .
+#      target: celery_beat
+  auth:
+    <<: *auth-service
+    build:
+      context: .
+      target: app-dev
+    ports:
+      - "5000:5000"
+    environment:
+      FLASK_SECRET_KEY: "replaceme"
+      AUTHLIB_INSECURE_TRANSPORT: 1
+  flower:
+    <<: *auth-service
+    depends_on: [ celery_worker ]
+    build:
+      context: .
+      target: celery_monitoring
+    ports:
+      - "5555:5555"
+  directus:
+    image: directus/directus:latest
+    ports:
+      - "8055:8055"
+    volumes:
+      - ./data/directus/database:/directus/database
+      - ./data/directus/uploads:/directus/uploads
+      - ./data/directus/extensions:/directus/extensions
+    environment:
+      KEY: "1e5997a321b01dd102700dc7db3f1c3beb7582f42c7932375b889d75709d808a"
+      SECRET: "0e02fc857555a06bed9c665ad8ed47ab93f4eaabeae15fd806bfa0386f2b2913"
+      ADMIN_EMAIL: "ich.bin@ein.dev"
+      ADMIN_PASSWORD: 'BocVUq4&!$$fA$$^vU@xtP'
+      DB_CLIENT: "sqlite3"
+      DB_FILENAME: "/directus/database/data.db"
+      WEBSOCKETS_ENABLED: false
+      EXTENSIONS_AUTO_RELOAD: true
+      LOG_LEVEL: debug
+      VRC_AUTH_USERNAME: "430ir8ki7@ein.dev"
+      VRC_AUTH_PASSWORD: "S9M6peH92XdrSSTeekfUhE"
+      VRC_AUTH_MFATOKEN: "KNJVIRBXLBUXC5ZQK4YESVLSPJFEM4CQ"
+      CORS_ENABLED: true
+      CORS_ORIGIN: http://127.0.0.1:8055
+      PUBLIC_URL: "http://127.0.0.1:8055/"
+      AUTH_PROVIDERS: vrchat
+      AUTH_VRCHAT_DRIVER: oauth2
+      AUTH_VRCHAT_CLIENT_ID: "tNa4awtlAnux9StbER7fdUcD"
+      AUTH_VRCHAT_CLIENT_SECRET: "F48u3dkbizx5RM9ssoH5hXjwzqjzapRBKnuCBVKIKxIu2yxJ"
+      AUTH_VRCHAT_SCOPE: "openid profile"
+      AUTH_VRCHAT_IDENTIFIER_KEY: "user_id"
+      AUTH_VRCHAT_ACCESS_URL: "http://auth:5000/oauth/token"
+      AUTH_VRCHAT_AUTHORIZE_URL: "http://127.0.0.1:5000/oauth/authorize"
+      AUTH_VRCHAT_LOGOUT_URL: "http://auth:5000/logout"
+      AUTH_VRCHAT_PROFILE_URL: "http://auth:5000/api/me"
+      AUTH_VRCHAT_ALLOW_PUBLIC_REGISTRATION: "true"
+      AUTH_VRCHAT_DEFAULT_ROLE_ID: "1c90bb88-c41b-49ce-81b9-e426c1146d39"

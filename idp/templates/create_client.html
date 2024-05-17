@@ -1,0 +1,40 @@
+<style>
+  label, label > span { display: block; }
+  label { margin: 15px 0; }
+</style>
+
+<a href="/">Home</a>
+
+<form action="" method="post">
+  <label>
+    <span>Client Name</span>
+    <input type="text" name="client_name" value="Directus API">
+  </label>
+  <label>
+    <span>Client URI</span>
+    <input type="url" name="client_uri" value="http://127.0.0.1:8055/">
+  </label>
+  <label>
+    <span>Allowed Scope</span>
+    <input type="text" name="scope" value="openid profile">
+  </label>
+  <label>
+    <span>Redirect URIs</span>
+    <textarea name="redirect_uri" cols="30" rows="10">http://127.0.0.1:8055/auth/login/vrchat/callback</textarea>
+  </label>
+  <label>
+    <span>Allowed Grant Types</span>
+    <textarea name="grant_type" cols="30" rows="10">authorization_code</textarea>
+  </label>
+  <label>
+    <span>Allowed Response Types</span>
+    <textarea name="response_type" cols="30" rows="10">code</textarea>
+  </label>
+  <label>
+    <span>Token Endpoint Auth Method</span>
+    <select name="token_endpoint_auth_method">
+      <option value="client_secret_basic">client_secret_basic</option>
+    </select>
+  </label>
+  <button>Submit</button>
+</form>
