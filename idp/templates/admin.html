@@ -1,0 +1,17 @@
+<div>Logged in as <strong>{{ user.display_name }}</strong> (<a href="{{ url_for('.logout') }}">Log Out</a>)</div>
+<table>
+<tr>
+    <th>Username</th>
+    <th>User-ID</th>
+    <th>User disabled</th>
+    <th>User code</th>
+</tr>
+{% for user in users %}
+    <tr>
+    <td>{{ user.display_name }}</td>
+    <td>{{ user.user_id }}</td>
+    <td><a href="{{ url_for('.toggle_login', user_id=user.user_id) }}">{{ user.disabled_login }}</a></td>
+        <td>{% if user.token %}<a href="{{ url_for('.reset_token', user_id=user.user_id) }}">{% endif %}{{ user.token }}{% if user.token %}</a>{% endif %}</td>
+    </tr>
+{% endfor %}
+</table>

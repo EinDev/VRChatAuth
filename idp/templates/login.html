@@ -1,0 +1,22 @@
+{% if error %}
+Error: {{ error }}
+{% endif %}
+<form action="{{ next_url | default('') }}" method="post">
+  <p>Log in with:</p>
+  <div>
+      {% if username is not defined %}
+      <label>
+          Username
+          <input type="text" name="username">
+      </label>
+      {% else %}
+          <input type="hidden" name="username" value="{{ username }}">
+      <label>
+          A code has been sent to your VRChat account. Please enter the code.
+          <input type="text" name="code">
+      </label>
+      {% endif %}
+  </div>
+  <br>
+  <button>Submit</button>
+</form>
