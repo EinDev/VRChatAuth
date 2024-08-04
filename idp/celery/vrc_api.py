@@ -19,28 +19,27 @@ class VRCAPI:
             username=username,
             password=password
         )
-        api_client = vrchatapi.ApiClient(configuration)
+        self.__api_client = vrchatapi.ApiClient(configuration)
         cookie_file = "vrc_api.cookie"
-        api_client.rest_client.cookie_jar = MozillaCookieJar(cookie_file)
+        self.__api_client.rest_client.cookie_jar = MozillaCookieJar(cookie_file)
         if os.path.isfile(cookie_file):
-            api_client.rest_client.cookie_jar.load()
+            self.__api_client.rest_client.cookie_jar.load()
 
         # Set our User-Agent as per VRChat Usage Policy
-        api_client.user_agent = "vrc_saml.py/1.0 vrc_saml.py@ein.dev"
+        self.__api_client.user_agent = "vrc_saml.py/1.0 vrc_saml.py@ein.dev"
         self.mfa_token = mfa_code
-        self.auth_api = authentication_api.AuthenticationApi(api_client)
-        self.login(api_client)
+        self.auth_api = authentication_api.AuthenticationApi(self.__api_client)
         self.group_id = group_id
-        self.friends_a = friends_api.FriendsApi(api_client)
-        self.users_a = users_api.UsersApi(api_client)
-        self.invite_a = invite_api.InviteApi(api_client)
-        self.groups_a = groups_api.GroupsApi(api_client)
+        self.friends_a = friends_api.FriendsApi(self.__api_client)
+        self.users_a = users_api.UsersApi(self.__api_client)
+        self.invite_a = invite_api.InviteApi(self.__api_client)
+        self.groups_a = groups_api.GroupsApi(self.__api_client)
 
     def get_mfa_token(self) -> str:
         totp = pyotp.TOTP(self.mfa_token)
         return totp.now()
 
-    def login(self, api_client):
+    def login(self):
         try:
             # Step 3. Calling getCurrentUser on Authentication API logs you in if the user isn't already logged in.
             current_user = self.auth_api.get_current_user()
@@ -55,7 +54,7 @@ class VRCAPI:
                 raise e
         except vrchatapi.ApiException as e:
             raise e
-        api_client.rest_client.cookie_jar.save()
+        self.__api_client.rest_client.cookie_jar.save()
         print("Logged in as:", current_user.display_name)
 
     def get_user(self, user_name: str) -> LimitedUser:

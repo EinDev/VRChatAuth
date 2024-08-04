@@ -28,13 +28,13 @@ CMD [ "celery", "-A", "idp.celery.make_celery_worker", "worker", "--loglevel", "
 
 FROM base as celery_beat
 HEALTHCHECK CMD celery -A idp.celery.make_celery_monitoring inspect ping || exit 1
-CMD [ "celery", "-A", "idp.celery.make_celery_worker", "beat", "--loglevel", "INFO"]
+CMD [ "celery", "-A", "idp.celery.make_celery_worker", "beat", "--loglevel", "INFO", "-s", "/home/worker/data/celerybeat-schedule"]
 
 FROM base as celery_monitoring
 COPY --chown=worker:worker requirements-dev.txt .
 RUN pip install --user -r requirements-dev.txt
 RUN rm requirements-dev.txt
-CMD [ "celery", "-A", "idp.celery.make_celery_monitoring", "flower" ]
+CMD [ "celery", "-A", "idp.celery.make_celery_monitoring", "flower", "--broker_api=redis://redis" ]
 
 FROM base as app-dev
 COPY --chown=worker:worker run_dev.py .

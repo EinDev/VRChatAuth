@@ -54,6 +54,12 @@ def load_user(user_name: str) -> Union[uuid.UUID, None]:
     return user.user_id
 
 
+@shared_task(ignore_result=True)
+def check_login():
+    vrc: VRCAPI = app.extensions["vrc"]
+    vrc.login()
+
+
 @shared_task(ignore_result=True, bind=True)
 def send_code(self, user_id: uuid.UUID):
     vrc: VRCAPI = app.extensions["vrc"]
@@ -61,9 +67,10 @@ def send_code(self, user_id: uuid.UUID):
     code = ''.join([random.choice(string.digits) for _ in range(0, 4)])
     vrc_uid = vrc.as_vrc_uuid(user_id)
     try:
-        role_id, ann_id = vrc.send_notification(vrc_uid, f"Code: {code}", "Someone requested an authentication token for "
-                                                                      "your account. If this was not you, ignore this message."
-                                                                      "This token will only be valid for 10 minutes")
+        role_id, ann_id = vrc.send_notification(vrc_uid, f"Code: {code}",
+                                                "Someone requested an authentication token for "
+                                                "your account. If this was not you, ignore this message."
+                                                "This token will only be valid for 10 minutes")
     except Exception as e:
         user.disabled_login = True
         db.session.add(user)
@@ -74,7 +81,6 @@ def send_code(self, user_id: uuid.UUID):
     # user.delete_token_task_id = uuid.UUID(delete_task.id)
     db.session.add(user)
     db.session.commit()
-
 
 
 @shared_task(ignore_result=True)
