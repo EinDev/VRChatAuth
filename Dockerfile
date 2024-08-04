@@ -37,10 +37,11 @@ RUN rm requirements-dev.txt
 CMD [ "celery", "-A", "idp.celery.make_celery_monitoring", "flower" ]
 
 FROM base as app-dev
+COPY --chown=worker:worker run_dev.py .
 ENV FLASK_APP=idp
 EXPOSE 5000
 EXPOSE 5555
-CMD [ "python", "-m", "flask", "run", "--host", "0.0.0.0", "--debug"]
+CMD [ "python", "run_dev.py"]
 
 FROM base as app-prod
 COPY --chown=worker:worker run_prod.py .

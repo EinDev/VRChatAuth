@@ -29,6 +29,20 @@ def split_by_crlf(s):
 ratelimit = Limiter(get_remote_address, strategy="moving-window")
 
 
+@bp.route('/request_code', methods=('GET',))
+def request_code():
+    display_name = request.args.get('username')
+    user = get_user_by_display_name(display_name)
+    response = jsonify({
+        'display_name': display_name,
+        'user_icon_url': user.user_icon_url,
+        'user_id': user.user_id
+    })
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
+
+
+
 @bp.route('/login', methods=('GET', 'POST'))
 @ratelimit.limit("1/second", exempt_when=lambda: request.method != "POST")
 @ratelimit.limit("5/minute", exempt_when=lambda: request.method != "POST")
