@@ -5,6 +5,7 @@ import email_validator
 from functools import wraps
 
 from flask import Blueprint, request, session, url_for, render_template, redirect, jsonify, abort
+from urllib.parse import urlparse
 from authlib.integrations.flask_oauth2 import current_token
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -68,8 +69,9 @@ def login():
 
         session['user_id'] = user.user_id
 
-        next_page = request.args.get('next')
-        if next_page:
+        next_page = request.args.get('next', '')
+        next_page = next_page.replace('\\', '')
+        if next_page and not urlparse(next_page).netloc and not urlparse(next_page).scheme:
             return redirect(next_page)
         return redirect('/')
     else:
