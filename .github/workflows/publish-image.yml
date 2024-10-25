@@ -52,3 +52,14 @@ jobs:
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         target: ${{ matrix.target }}
+        
+  deploy:
+    runs-on: ubuntu-latest
+    environment: Production
+    steps:
+    - name: 'Deploy'
+      id: deploy-dummy
+      run: |
+        echo "Deploy to $TARGET_ENV triggered"
+      env:
+        TARGET_ENV: ${{ inputs.env }}
