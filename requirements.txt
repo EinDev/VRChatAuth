@@ -1,4 +1,5 @@
 Flask==3.0.3
+flask-cors==4.0.1
 Flask-Sqlalchemy==3.1.1
 Authlib==1.3.2
 celery==5.4.0

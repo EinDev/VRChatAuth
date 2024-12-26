@@ -65,6 +65,12 @@ def send_code(self, user_id: uuid.UUID):
     vrc: VRCAPI = app.extensions["vrc"]
     user: User = User.query.get(user_id)
     code = ''.join([random.choice(string.digits) for _ in range(0, 4)])
+    if vrc.mock_api:
+        user.token = code
+        db.session.add(user)
+        db.session.commit()
+        app.logger.info(f"Mocked Notification for user ${user}: ${code}")
+        return
     vrc_uid = vrc.as_vrc_uuid(user_id)
     try:
         role_id, ann_id = vrc.send_notification(vrc_uid, f"Code: {code}",

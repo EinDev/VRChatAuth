@@ -14,13 +14,14 @@ from vrchatapi.exceptions import UnauthorizedException
 
 
 class VRCAPI:
-    def __init__(self, username, password, group_id, mfa_code):
+    def __init__(self, username, password, group_id, mfa_code, mock_api: bool):
+        self.mock_api = mock_api
         configuration = vrchatapi.Configuration(
             username=username,
             password=password
         )
         self.__api_client = vrchatapi.ApiClient(configuration)
-        cookie_file = "vrc_api.cookie"
+        cookie_file = "instance/cookies.txt"
         self.__api_client.rest_client.cookie_jar = MozillaCookieJar(cookie_file)
         if os.path.isfile(cookie_file):
             self.__api_client.rest_client.cookie_jar.load()
@@ -110,6 +111,10 @@ class VRCAPI:
 
 def vrc_init_app(app: Flask) -> VRCAPI:
     cfg = app.config["VRC"]
-    vrc_api = VRCAPI(cfg.get('USERNAME'), cfg.get('PASSWORD'), cfg.get('GROUP_ID'), cfg.get('MFA_CODE'))
+    vrc_api = VRCAPI(cfg.get('USERNAME'),
+                     cfg.get('PASSWORD'),
+                     cfg.get('GROUP_ID'),
+                     cfg.get('MFA_CODE'),
+                     str(cfg.get('MOCK_API')).lower() != "false")
     app.extensions["vrc"] = vrc_api
     return vrc_api

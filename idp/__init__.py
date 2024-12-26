@@ -1,4 +1,6 @@
 import os
+
+import flask_cors
 from flask import Flask
 from werkzeug.middleware.proxy_fix import ProxyFix
 
@@ -45,6 +47,7 @@ def create_app(config=None, with_vrc_api=False):
 
 
 def setup_app(app: Flask, with_vrc_api: bool):
+    flask_cors.CORS(app)
     db.init_app(app)
     # Create tables if they do not exist already
     with app.app_context():
