@@ -1,7 +1,7 @@
 Flask==3.1.0
 flask-cors==5.0.1
 Flask-Sqlalchemy==3.1.1
-Authlib==1.4.1
+Authlib==1.5.1
 celery==5.4.0
 redis==5.2.1
 Flask-Limiter==3.10.1
