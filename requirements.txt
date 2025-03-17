@@ -4,7 +4,7 @@ Flask-Sqlalchemy==3.1.1
 Authlib==1.4.1
 celery==5.4.0
 redis==5.2.1
-Flask-Limiter==3.10.1
+Flask-Limiter==3.12
 paste==3.9.0
 waitress==3.0.2
 email-validator==2.2.0
