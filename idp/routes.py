@@ -72,10 +72,9 @@ def login():
 
         next_page = request.args.get('next', '')
         next_page = next_page.replace('\\', '')
-        hostname = request.environ.get('HTTP_HOST', '')
-        if next_page and not urlparse(next_page).netloc == hostname:
+        if next_page:
             return redirect(next_page)
-        return abort(400, "Invalid redirect URI")
+        return redirect('/')
     else:
         return render_template('login.html')
 
