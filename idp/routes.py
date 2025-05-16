@@ -9,6 +9,7 @@ from urllib.parse import urlparse
 from authlib.integrations.flask_oauth2 import current_token
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from werkzeug.utils import send_from_directory
 
 from .models import User, db
 from .oauth2 import authorization, require_oauth
@@ -30,53 +31,43 @@ def split_by_crlf(s):
 ratelimit = Limiter(get_remote_address, strategy="moving-window")
 
 
-@bp.route('/request_code', methods=('GET',))
+@bp.route('/api/requestcode', methods=('POST',))
 def request_code():
-    display_name = request.args.get('username')
+    display_name = request.json.get('username')
     user = get_user_by_display_name(display_name)
     if not user:
-        return abort(404)
+        return abort(400, "Username" + str(display_name) + " not found")
     response = jsonify({
         'display_name': display_name,
         'user_icon_url': user.user_icon_url,
         'user_id': user.user_id
     })
+    if user.token is None:
+        send_code.delay(user.user_id)
     return response
 
-
-@bp.route('/login', methods=('GET', 'POST'))
+@bp.route('/api/login', methods=('POST',))
 @ratelimit.limit("1/second", exempt_when=lambda: request.method != "POST")
 @ratelimit.limit("5/minute", exempt_when=lambda: request.method != "POST")
 @ratelimit.limit("5/minute", exempt_when=lambda: request.method != "POST")
-def login():
-    if request.method == 'POST':
-        display_name = request.form.get('username')
-        if not display_name:
-            return render_template('login.html')
-        user = get_user_by_display_name(display_name)
+def check_login():
+    display_name = request.json.get('username')
+    code = request.json.get('code')
 
-        if not user or user.disabled_login:
-            return render_template('login.html', username=display_name,
-                                   error="Invalid username (User does not exist, is not part of the group or may be disabled)")
+    user = get_user_by_display_name(display_name)
+    if not user or not user.is_code_valid(code):
+        return abort(400, "Code expired or invalid. Please request a new code.")
+    session['user_id'] = user.user_id
 
-        code = request.form.get('code')
-        if not code:
-            if user.token is None:  # Only send code if a user has no current code
-                send_code.delay(user.user_id)
-            return render_template('login.html', username=display_name)
+    return jsonify({'status': 'ok'})
 
-        if not user or not user.is_code_valid(code):
-            return render_template('login.html', error="Invalid code")
 
-        session['user_id'] = user.user_id
-
-        next_page = request.args.get('next', '')
-        next_page = next_page.replace('\\', '')
-        if next_page:
-            return redirect(next_page)
-        return redirect('/')
-    else:
-        return render_template('login.html')
+@bp.route('/login/', methods=('GET',))
+@bp.route('/login/<path:path>', methods=('GET',))
+def login(path=""):
+    if path == "":
+        path = "index.html"
+    return send_from_directory("idp/static", path=path, environ=request.environ)
 
 
 def login_required(user_id: str = None):
@@ -138,7 +129,7 @@ def logout():
 #     return redirect('/')
 
 
-@bp.route('/admin', methods=['GET'])
+@bp.route('/api/admin', methods=['GET'])
 @login_required(user_id="c58b4d88-4a7b-43c5-a775-12211788adf5")
 def admin(user):
     return render_template('admin.html', user=user, users=User.query.all())
