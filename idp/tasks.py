@@ -82,7 +82,8 @@ def send_code(self, user_id: uuid.UUID):
         user.disabled_login = True
         db.session.add(user)
         db.session.commit()
-        raise e
+        app.logger.warning(f"Could not send login code to {user.display_name}: {e}")
+        return f"Could not send login code to {user.display_name}"
     user.token = code
     delete_code.apply_async((vrc_uid, role_id, ann_id), countdown=10 * 60)
     # user.delete_token_task_id = uuid.UUID(delete_task.id)

@@ -41,9 +41,11 @@ def request_code():
         return abort(400, "Username" + str(display_name) + " not found")
     if user.token is None:
         try:
-            send_code.delay(user.user_id).get(timeout=15)
+            error = send_code.delay(user.user_id).get(timeout=15)
         except Exception as e:
             current_app.logger.warning(f"Could not send login code to {display_name}: {e}")
+            return abort(400, "Could not send you a login code. Please try again later.")
+        if error:
             return abort(400, "Could not send you a login code. Please try again later.")
     return jsonify({
         'display_name': display_name,
