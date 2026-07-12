@@ -22,8 +22,9 @@ def upsert_user(vrc_user: LimitedUser) -> User:
     user.data_from = datetime.datetime.utcnow()
     if user.display_name != vrc_user.display_name:
         user.display_name = vrc_user.display_name
-    if user.user_icon_url != vrc_user.user_icon:
-        user.user_icon_url = vrc_user.user_icon
+    icon_url = vrc_user.user_icon or vrc_user.profile_pic_override or vrc_user.current_avatar_thumbnail_image_url
+    if user.user_icon_url != icon_url:
+        user.user_icon_url = icon_url
     db.session.add(user)
     db.session.commit()
     return user
