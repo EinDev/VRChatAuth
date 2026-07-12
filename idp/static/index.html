@@ -1,1 +1,248 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><title>React Class-less login • Pico CSS</title><meta name="description" content="A minimal, class-less login page in React, with a custom primary color."><script defer="defer" src="bundle.js"></script></head><body><noscript>You need to enable JavaScript to run this app.</noscript><div id="root"></div></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rusk Alliance — Login</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  /* ---- Rusk Alliance tokens (self-contained) ---- */
+  :root{
+    --navy-900:#071527; --navy-800:#0a1e3a; --navy-700:#10294d; --navy-600:#16345f; --navy-500:#1e457a;
+    --teal-800:#0e3441; --teal-700:#14808f;
+    --cyan-500:#2ec6dd; --cyan-400:#46d4e8; --cyan-300:#7ee3f2;
+    --yellow-500:#e6d63a; --yellow-400:#f0e455;
+    --white:#fff; --slate-100:#e7eef7; --slate-300:#b3c4dc; --slate-400:#8aa0bf; --slate-500:#647a99;
+    --danger:#ff5d6c; --success:#4bd08a;
+    --font-display:"Fredoka","Trebuchet MS",sans-serif; --font-body:"Nunito",system-ui,sans-serif; --font-mono:"Space Mono",ui-monospace,monospace;
+    --radius-md:14px; --radius-lg:20px; --radius-xl:28px;
+    --ease-bounce:cubic-bezier(0.34,1.56,0.64,1); --ease-out:cubic-bezier(0.16,1,0.3,1);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{font-family:var(--font-body);color:var(--slate-100);
+    background:radial-gradient(1200px 700px at 70% -10%, #123a5c 0%, var(--navy-800) 45%, var(--navy-900) 100%);
+    min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px;}
+  a{color:var(--cyan-400);text-decoration:none} a:hover{color:var(--cyan-300)}
+  @keyframes ra-step-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  @keyframes ra-pop-in{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
+  @keyframes ra-spin{to{transform:rotate(360deg)}}
+
+  .early{position:fixed;top:24px;right:28px;font-family:var(--font-display);font-weight:600;font-size:12px;
+    letter-spacing:.08em;color:var(--yellow-400);border:2px solid var(--yellow-500);border-radius:999px;padding:6px 14px;
+    box-shadow:0 0 0 1px rgba(230,214,58,.7),0 0 16px rgba(230,214,58,.4);}
+  .panel{width:460px;max-width:100%;display:flex;flex-direction:column;align-items:center;text-align:center;
+    background:rgba(10,30,58,.72);backdrop-filter:blur(10px);border:2px solid var(--cyan-500);border-radius:var(--radius-xl);
+    box-shadow:0 0 40px rgba(46,198,221,.3),0 20px 60px rgba(0,0,0,.55);padding:40px;}
+  .wm{position:relative;display:inline-flex;align-items:center;background:var(--white);border:2px solid var(--navy-900);
+    border-radius:12px;padding:9px 18px;margin-bottom:10px;}
+  .wm span{font-family:var(--font-display);font-weight:700;font-size:24px;letter-spacing:-.01em;color:var(--navy-900);line-height:1;}
+  .wm span b{color:var(--teal-700);font-weight:700}
+  .wm::after{content:"";position:absolute;right:18px;bottom:-7px;width:12px;height:12px;background:var(--white);
+    border-right:2px solid var(--navy-900);border-bottom:2px solid var(--navy-900);transform:rotate(45deg);border-bottom-right-radius:3px;}
+  .step{width:100%;animation:ra-step-in .36s var(--ease-out)}
+  .hint{font-family:var(--font-display);font-weight:600;font-size:20px;color:var(--white);margin:18px 0 4px}
+  .sub{font-size:14px;color:var(--slate-400);margin:0 0 24px}
+  label.field{display:block;text-align:left;width:100%}
+  label.field>span{display:block;font-family:var(--font-display);font-weight:500;font-size:13px;color:var(--slate-300);margin-bottom:6px}
+  input{width:100%;background:var(--navy-900);border:2px solid var(--navy-500);border-radius:var(--radius-md);
+    padding:13px 15px;color:var(--slate-100);font-family:var(--font-body);font-size:15px;outline:none;transition:all .2s var(--ease-out);}
+  input:focus{border-color:var(--cyan-500);box-shadow:0 0 14px rgba(46,198,221,.3)}
+  input.pin{text-align:center;font-family:var(--font-mono);font-size:34px;font-weight:700;letter-spacing:.5em;text-indent:.5em;padding:16px;color:var(--white)}
+  .err{text-align:left;font-size:13px;color:var(--danger);margin:8px 0 0;min-height:0}
+  .btn{width:100%;font-family:var(--font-display);font-weight:600;font-size:18px;padding:16px 30px;border-radius:var(--radius-lg);
+    border:2px solid var(--cyan-500);background:var(--cyan-500);color:var(--navy-900);cursor:pointer;
+    transition:all .2s var(--ease-bounce);}
+  .btn:hover{background:var(--cyan-400);transform:translateY(-1px);box-shadow:0 0 24px rgba(46,198,221,.5)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn.secondary{background:rgba(255,255,255,.04);border-color:var(--navy-500);color:var(--slate-100);font-size:15px;padding:12px 24px}
+  .btn.secondary:hover{border-color:var(--cyan-500);color:var(--cyan-300);background:rgba(255,255,255,.04);box-shadow:none}
+  .linkbtn{margin-top:14px;background:none;border:none;color:var(--slate-400);font-family:var(--font-display);font-weight:600;font-size:14px;cursor:pointer}
+  .linkbtn:hover{color:var(--cyan-400)}
+  .avatar{width:96px;height:96px;border-radius:50%;object-fit:cover;border:2px solid var(--cyan-500);
+    background:rgba(46,198,221,.08);box-shadow:0 0 18px rgba(46,198,221,.4);}
+  .avatar.big{width:112px;height:112px}
+  .spinner{width:120px;height:120px;animation:ra-spin 1.6s linear infinite;filter:drop-shadow(0 0 6px rgba(46,198,221,.7))}
+  .loadlabel{font-family:var(--font-display);font-weight:600;font-size:15px;letter-spacing:.04em;color:var(--cyan-300);margin-top:8px}
+  .center-col{display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 0}
+  .hidden{display:none!important}
+</style>
+</head>
+<body>
+  <div class="early">Early Access</div>
+  <div class="panel">
+    <div class="wm"><span>RUSK<b>ALLIANCE</b></span></div>
+
+    <!-- STEP 1: username -->
+    <div class="step" id="step-username">
+      <p class="hint">Welcome back, wanderer</p>
+      <p class="sub">Who are you out in the worlds?</p>
+      <label class="field"><span>Username</span>
+        <input id="username" placeholder="LacyTheEspeon" autocomplete="username" autofocus>
+      </label>
+      <p class="err" id="username-err"></p>
+      <button class="btn" id="continue-btn" style="margin-top:22px" disabled>Continue</button>
+    </div>
+
+    <!-- STEP 2: loading -->
+    <div class="step center-col hidden" id="step-loading">
+      <svg class="spinner" viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="none" stroke="var(--cyan-500)" stroke-width="6" stroke-linecap="round" stroke-dasharray="14 12"/></svg>
+      <p class="loadlabel">FINDING YOU</p>
+      <p class="sub" style="margin:4px 0 0">Looking up <b id="loading-name" style="color:var(--cyan-300)"></b>…</p>
+    </div>
+
+    <!-- STEP 3: PIN -->
+    <div class="step hidden" id="step-pin">
+      <div style="display:flex;justify-content:center;margin:20px 0 12px;animation:ra-pop-in .36s var(--ease-bounce)">
+        <img class="avatar" id="pin-avatar" alt="Your avatar">
+      </div>
+      <p class="hint" id="pin-greeting">Hey! 👋</p>
+      <p class="sub">We sent a 4-digit PIN to your device. Pop it in below.</p>
+      <input class="pin" id="pin" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="one-time-code">
+      <p class="err" id="pin-err"></p>
+      <button class="btn" id="verify-btn" style="margin-top:22px" disabled>Verify &amp; enter</button>
+      <button class="linkbtn" id="reset-btn">← Not you? Start over</button>
+    </div>
+
+    <!-- STEP 4: verifying -->
+    <div class="step center-col hidden" id="step-verifying">
+      <svg class="spinner" viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="none" stroke="var(--cyan-500)" stroke-width="6" stroke-linecap="round" stroke-dasharray="14 12"/></svg>
+      <p class="loadlabel">CHECKING PIN</p>
+    </div>
+
+    <!-- STEP 5: success -->
+    <div class="step center-col hidden" id="step-success">
+      <img class="avatar big" id="success-avatar" alt="Your avatar" style="animation:ra-pop-in .36s var(--ease-bounce)">
+      <p class="hint" style="font-size:26px;margin-top:8px">You're in! 🎉</p>
+      <p class="sub" style="font-size:15px">Welcome home, <b id="success-name" style="color:var(--cyan-300)"></b>. The couch is warm.</p>
+      <button class="btn secondary" id="logout-btn">Log out &amp; try again</button>
+    </div>
+  </div>
+
+<script>
+/* =============================================================================
+   THE RUSK ALLIANCE — LOGIN
+
+   Backed by idp/routes.py:
+     POST /api/requestcode { username } -> { display_name, user_icon_url, user_id }
+       Looks up the VRChat user and (if no code outstanding) sends one via
+       VRChat notification. 400 if username not found.
+     POST /api/login { username, code } -> { status: 'ok' } + sets session cookie
+       400 if the code is expired/invalid.
+   On success this page redirects to /oauth/authorize (keeping the query string
+   from the original request) so the OAuth flow that brought the user here can
+   continue.
+   ============================================================================= */
+
+const RuskAuth = {
+  async requestPin(username) {
+    const res = await fetch('/api/requestcode', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username }),
+    });
+    if (!res.ok) throw new Error('lookup failed');
+    const data = await res.json();
+    return { displayName: data.display_name, avatarUrl: data.user_icon_url };
+  },
+
+  async verifyPin(username, pin) {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, code: pin }),
+    });
+    return { ok: res.ok };
+  },
+};
+
+/* ---------------------------------------------------------------------------
+   UI wiring (presentation) — no backend logic below this line.
+   --------------------------------------------------------------------------- */
+const $ = (id) => document.getElementById(id);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const setText = (id, t) => { $(id).textContent = t; };
+const STEPS = ['step-username','step-loading','step-pin','step-verifying','step-success'];
+function show(step){ STEPS.forEach((s)=>$(s).classList.toggle('hidden', s!==step)); }
+
+let username = '';
+let profile = null;
+
+// Step 1 — username
+$('username').addEventListener('input', (e) => {
+  username = e.target.value.trim();
+  $('continue-btn').disabled = !username;
+  $('username-err').textContent = '';
+});
+$('username').addEventListener('keydown', (e) => { if (e.key === 'Enter' && username) doContinue(); });
+$('continue-btn').addEventListener('click', doContinue);
+
+async function doContinue(){
+  if (!username) { setText('username-err','Enter a username to continue.'); return; }
+  show('step-loading');
+  setText('loading-name', username);
+  try {
+    profile = await RuskAuth.requestPin(username);
+  } catch (err) {
+    show('step-username');
+    setText('username-err', "Couldn't find that username. Try again.");
+    console.error(err); return;
+  }
+  // populate PIN step (user_icon_url is empty for most VRChat users — leave the
+  // styled circle empty rather than pointing <img> at a null/empty src)
+  if (profile.avatarUrl) {
+    $('pin-avatar').src = profile.avatarUrl;
+    $('success-avatar').src = profile.avatarUrl;
+  }
+  setText('pin-greeting', `Hey, ${profile.displayName}! 👋`);
+  $('pin').value = '';
+  $('verify-btn').disabled = true;
+  show('step-pin');
+  $('pin').focus();
+}
+
+// Step 3 — PIN
+$('pin').addEventListener('input', (e) => {
+  const v = e.target.value.replace(/\D/g,'').slice(0,4);
+  e.target.value = v;
+  $('verify-btn').disabled = v.length !== 4;
+  $('pin-err').textContent = '';
+});
+$('pin').addEventListener('keydown', (e) => { if (e.key === 'Enter' && $('pin').value.length === 4) doVerify(); });
+$('verify-btn').addEventListener('click', doVerify);
+$('reset-btn').addEventListener('click', resetFlow);
+$('logout-btn').addEventListener('click', resetFlow);
+
+async function doVerify(){
+  const pin = $('pin').value;
+  if (pin.length !== 4) { setText('pin-err','Your PIN is 4 digits.'); return; }
+  show('step-verifying');
+  let result;
+  try { result = await RuskAuth.verifyPin(username, pin); }
+  catch (err) { show('step-pin'); setText('pin-err','Something went wrong. Try again.'); console.error(err); return; }
+  if (result && result.ok) {
+    setText('success-name', profile.displayName);
+    show('step-success');
+    await sleep(900);
+    window.location.href = '/oauth/authorize' + window.location.search;
+  } else {
+    $('pin').value = '';
+    show('step-pin');
+    setText('pin-err', "That PIN didn't match. Give it another go.");
+    $('pin').focus();
+  }
+}
+
+function resetFlow(){
+  username = ''; profile = null;
+  $('username').value = ''; $('pin').value = '';
+  $('continue-btn').disabled = true; $('verify-btn').disabled = true;
+  setText('username-err',''); setText('pin-err','');
+  show('step-username');
+  $('username').focus();
+}
+</script>
+</body>
+</html>

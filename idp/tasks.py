@@ -1,5 +1,5 @@
 import datetime
-import random
+import secrets
 import string
 import uuid
 from typing import Union
@@ -64,7 +64,7 @@ def check_login():
 def send_code(self, user_id: uuid.UUID):
     vrc: VRCAPI = app.extensions["vrc"]
     user: User = User.query.get(user_id)
-    code = ''.join([random.choice(string.digits) for _ in range(0, 4)])
+    code = ''.join([secrets.choice(string.digits) for _ in range(0, 4)])
     if vrc.mock_api:
         user.token = code
         db.session.add(user)
@@ -106,7 +106,7 @@ def celery_init_app(flask_app: Flask) -> Celery:
             with flask_app.app_context():
                 return self.run(*args, **kwargs)
 
-    celery_app = Celery(flask_app.name, task_cls=ContextTask, broker_connection_retry_on_startup=False)
+    celery_app = Celery(flask_app.name, task_cls=ContextTask, broker_connection_retry_on_startup=True)
     celery_app.config_from_object(flask_app.config['CELERY'])
     celery_app.set_default()
     flask_app.extensions["celery"] = celery_app

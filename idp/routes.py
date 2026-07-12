@@ -1,5 +1,6 @@
 import codecs
 import hashlib
+import time
 import uuid
 import email_validator
 from functools import wraps
@@ -9,9 +10,10 @@ from urllib.parse import urlparse
 from authlib.integrations.flask_oauth2 import current_token
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from werkzeug.security import gen_salt
 from werkzeug.utils import send_from_directory
 
-from .models import User, db
+from .models import User, db, OAuth2Client
 from .oauth2 import authorization, require_oauth
 from .tasks import send_code, get_user_by_display_name
 
@@ -92,41 +94,41 @@ def logout():
     return redirect('/')
 
 
-# @bp.route('/create_client', methods=('GET', 'POST'))
-# def create_client():
-#     user = current_user()
-#     if not user:
-#         return redirect('/')
-#     if request.method == 'GET':
-#         return render_template('create_client.html')
-#
-#     client_id = gen_salt(24)
-#     client_id_issued_at = int(time.time())
-#     client = OAuth2Client(
-#         client_id=client_id,
-#         client_id_issued_at=client_id_issued_at
-#     )
-#
-#     form = request.form
-#     client_metadata = {
-#         "client_name": form["client_name"],
-#         "client_uri": form["client_uri"],
-#         "grant_types": split_by_crlf(form["grant_type"]),
-#         "redirect_uris": split_by_crlf(form["redirect_uri"]),
-#         "response_types": split_by_crlf(form["response_type"]),
-#         "scope": form["scope"],
-#         "token_endpoint_auth_method": form["token_endpoint_auth_method"]
-#     }
-#     client.set_client_metadata(client_metadata)
-#
-#     if form['token_endpoint_auth_method'] == 'none':
-#         client.client_secret = ''
-#     else:
-#         client.client_secret = gen_salt(48)
-#
-#     db.session.add(client)
-#     db.session.commit()
-#     return redirect('/')
+@bp.route('/create_client', methods=('GET', 'POST'))
+def create_client():
+    user = current_user()
+    if not user:
+        return redirect('/')
+    if request.method == 'GET':
+        return render_template('create_client.html')
+
+    client_id = gen_salt(24)
+    client_id_issued_at = int(time.time())
+    client = OAuth2Client(
+        client_id=client_id,
+        client_id_issued_at=client_id_issued_at
+    )
+
+    form = request.form
+    client_metadata = {
+        "client_name": form["client_name"],
+        "client_uri": form["client_uri"],
+        "grant_types": split_by_crlf(form["grant_type"]),
+        "redirect_uris": split_by_crlf(form["redirect_uri"]),
+        "response_types": split_by_crlf(form["response_type"]),
+        "scope": form["scope"],
+        "token_endpoint_auth_method": form["token_endpoint_auth_method"]
+    }
+    client.set_client_metadata(client_metadata)
+
+    if form['token_endpoint_auth_method'] == 'none':
+        client.client_secret = ''
+    else:
+        client.client_secret = gen_salt(48)
+
+    db.session.add(client)
+    db.session.commit()
+    return redirect('/')
 
 
 @bp.route('/api/admin', methods=['GET'])

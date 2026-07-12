@@ -1,0 +1,94 @@
+x-auth-service: &auth-service
+  depends_on: [ redis ]
+  volumes:
+    - ./data:/home/worker/instance
+
+x-celery-service: &celery-service
+  <<: *auth-service
+  env_file:
+      - .vrc.env
+
+services:
+  redis:
+    image: redis:7.2-alpine
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis-data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+  celery_worker:
+    <<: *celery-service
+    build:
+      target: celery_worker
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+  celery_beat:
+    <<: *celery-service
+    build:
+      target: celery_beat
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./scheduler:/home/worker/data
+  auth:
+    <<: *auth-service
+    build:
+      target: app-prod
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    ports:
+      - "5000:8080"
+    env_file:
+      - .vrc.env
+    environment:
+      AUTHLIB_INSECURE_TRANSPORT: 1
+    healthcheck:
+      test: [ "CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/login/')" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+  directus:
+    image: directus/directus:latest
+    restart: unless-stopped
+    depends_on:
+      auth:
+        condition: service_healthy
+    ports:
+      - 8055:8055
+    volumes:
+      - ./database:/directus/database
+      - ./uploads:/directus/uploads
+      - ./extensions:/directus/extensions
+    env_file:
+      - .vrc.env
+    environment:
+      DB_CLIENT: "sqlite3"
+      DB_FILENAME: "/directus/database/data.db"
+      WEBSOCKETS_ENABLED: false
+      EXTENSIONS_AUTO_RELOAD: true
+      LOG_LEVEL: debug
+      CORS_ENABLED: true
+      CORS_ORIGIN: https://rusk.alliance.rocks,http://127.0.0.1:8000,http://127.0.0.1:8055,http://127.0.0.1:5000,https://fenri.ru,https://fenriru.ein.dev
+      PUBLIC_URL: "http://127.0.0.1:8055/"
+      AUTH_PROVIDERS: vrchat
+      AUTH_VRCHAT_DRIVER: oauth2
+      AUTH_VRCHAT_CLIENT_ID: "98LRlNMmGWGgMsR8VFjp62HS"
+      AUTH_VRCHAT_SCOPE: "openid profile"
+      AUTH_VRCHAT_ACCESS_URL: "http://auth:8080/oauth/token"
+      AUTH_VRCHAT_AUTHORIZE_URL: "http://127.0.0.1:5000/oauth/authorize"
+      AUTH_VRCHAT_PROFILE_URL: "http://auth:8080/api/me"
+      AUTH_VRCHAT_ALLOW_PUBLIC_REGISTRATION: "true"
+      AUTH_VRCHAT_DEFAULT_ROLE_ID: "a845a334-1fbd-44df-b29e-a0bb202238e2"

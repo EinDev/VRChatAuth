@@ -1,4 +1,8 @@
 /.venv/
 /data/
-/data/.vrc.env
+/.vrc.env
 /.idea
+/database/
+/redis-data/
+/scheduler/
+__pycache__/
