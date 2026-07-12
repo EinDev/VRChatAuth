@@ -77,6 +77,7 @@
 
     <!-- STEP 1: username -->
     <div class="step" id="step-username">
+      <button class="linkbtn" id="back-btn" style="display:block;text-align:left;margin:0 0 8px">← Back</button>
       <p class="hint">Welcome back, wanderer</p>
       <p class="sub">Who are you out in the worlds?</p>
       <label class="field"><span>Username</span>
@@ -179,6 +180,7 @@ $('username').addEventListener('input', (e) => {
 });
 $('username').addEventListener('keydown', (e) => { if (e.key === 'Enter' && username) doContinue(); });
 $('continue-btn').addEventListener('click', doContinue);
+$('back-btn').addEventListener('click', () => { window.history.back(); });
 
 async function doContinue(){
   if (!username) { setText('username-err','Enter a username to continue.'); return; }
