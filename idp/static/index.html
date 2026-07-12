@@ -131,9 +131,10 @@
        VRChat notification. 400 if username not found.
      POST /api/login { username, code } -> { status: 'ok' } + sets session cookie
        400 if the code is expired/invalid.
-   On success this page redirects to /oauth/authorize (keeping the query string
-   from the original request) so the OAuth flow that brought the user here can
-   continue.
+   On success this page redirects back into the OAuth flow that brought the
+   user here. login_required() (idp/routes.py) sends users here as
+   /login/?next=<url-encoded original /oauth/authorize?... request>, so we
+   redirect to that decoded `next` value, not to our own query string.
    ============================================================================= */
 
 const RuskAuth = {
@@ -226,7 +227,8 @@ async function doVerify(){
     setText('success-name', profile.displayName);
     show('step-success');
     await sleep(900);
-    window.location.href = '/oauth/authorize' + window.location.search;
+    const next = new URLSearchParams(window.location.search).get('next');
+    window.location.href = next || ('/oauth/authorize' + window.location.search);
   } else {
     $('pin').value = '';
     show('step-pin');
