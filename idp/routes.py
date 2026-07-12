@@ -5,7 +5,7 @@ import uuid
 import email_validator
 from functools import wraps
 
-from flask import Blueprint, request, session, url_for, render_template, redirect, jsonify, abort
+from flask import Blueprint, request, session, url_for, render_template, redirect, jsonify, abort, current_app
 from urllib.parse import urlparse
 from authlib.integrations.flask_oauth2 import current_token
 from flask_limiter import Limiter
@@ -39,14 +39,17 @@ def request_code():
     user = get_user_by_display_name(display_name)
     if not user:
         return abort(400, "Username" + str(display_name) + " not found")
-    response = jsonify({
+    if user.token is None:
+        try:
+            send_code.delay(user.user_id).get(timeout=15)
+        except Exception as e:
+            current_app.logger.warning(f"Could not send login code to {display_name}: {e}")
+            return abort(400, "Could not send you a login code. Please try again later.")
+    return jsonify({
         'display_name': display_name,
         'user_icon_url': user.user_icon_url,
         'user_id': user.user_id
     })
-    if user.token is None:
-        send_code.delay(user.user_id)
-    return response
 
 @bp.route('/api/login', methods=('POST',))
 @ratelimit.limit("1/second", exempt_when=lambda: request.method != "POST")

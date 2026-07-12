@@ -60,7 +60,7 @@ def check_login():
     vrc.login()
 
 
-@shared_task(ignore_result=True, bind=True)
+@shared_task(ignore_result=False, bind=True)
 def send_code(self, user_id: uuid.UUID):
     vrc: VRCAPI = app.extensions["vrc"]
     user: User = User.query.get(user_id)
