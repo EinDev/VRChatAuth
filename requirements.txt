@@ -2,7 +2,7 @@ Flask==3.1.3
 flask-cors==6.0.0
 Flask-Sqlalchemy==3.1.1
 Authlib==1.7.2
-celery==5.5.2
+celery==5.6.3
 redis==7.0.0
 Flask-Limiter==3.12
 paste==3.9.0
