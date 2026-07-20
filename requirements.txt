@@ -7,5 +7,5 @@ redis==7.0.0
 Flask-Limiter==3.12
 paste==3.9.0
 waitress==3.0.2
-email-validator==2.2.0
+email-validator==2.3.0
 pyotp==2.9.0
