@@ -8,4 +8,4 @@ Flask-Limiter==3.12
 paste==3.9.0
 waitress==3.0.2
 email-validator==2.2.0
-pyotp==2.9.0
+pyotp==2.10.0
