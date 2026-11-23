@@ -6,3 +6,4 @@
 /redis-data/
 /scheduler/
 __pycache__/
+/instance/
