@@ -8,7 +8,7 @@ from uuid import UUID
 
 import pyotp
 import vrchatapi
-from vrchatapi import LimitedUser, TwoFactorAuthCode
+from vrchatapi import TwoFactorAuthCode, UserResponse
 from vrchatapi.api import authentication_api, friends_api, users_api, invite_api, groups_api
 from vrchatapi.exceptions import UnauthorizedException
 
@@ -58,18 +58,19 @@ class VRCAPI:
         self.__api_client.rest_client.cookie_jar.save()
         print("Logged in as:", current_user.display_name)
 
-    def get_user(self, user_name: str) -> LimitedUser:
+    def get_user(self, user_name: str) -> UserResponse:
         user_result = self.users_a.search_users(search=user_name)
         if len(user_result) == 0:
             raise Exception("User not found.")
 
-        user_id = user_result[0].id
+        match = next((u for u in user_result if (u.display_name or "").lower() == user_name.lower()), user_result[0])
+        user_id = match.id
 
         member_status = self.groups_a.get_group_member(self.group_id, user_id)
         if not member_status:
             raise Exception("User is not a member of the group.")
 
-        return user_result[0]
+        return self.users_a.get_user(user_id)
 
     def send_notification(self, user_id, title, text) -> (str, Union[str, None]):
         role = None
