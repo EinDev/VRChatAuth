@@ -7,12 +7,12 @@ from typing import Union
 from celery import Celery, Task, shared_task
 from flask import Flask, current_app as app
 
-from vrchatapi import LimitedUser
+from vrchatapi import UserResponse
 from .models import User, db
 from idp.celery.vrc_api import VRCAPI
 
 
-def upsert_user(vrc_user: LimitedUser) -> User:
+def upsert_user(vrc_user: UserResponse) -> User:
     user_uuid = uuid.UUID(vrc_user.id[4:])
     user = User.query.get(user_uuid)
     if not user:
@@ -22,7 +22,10 @@ def upsert_user(vrc_user: LimitedUser) -> User:
     user.data_from = datetime.datetime.utcnow()
     if user.display_name != vrc_user.display_name:
         user.display_name = vrc_user.display_name
-    icon_url = vrc_user.user_icon or vrc_user.profile_pic_override or vrc_user.current_avatar_thumbnail_image_url
+    icon_url = (getattr(vrc_user, 'user_icon', None)
+                or getattr(vrc_user, 'profile_pic_override', None)
+                or getattr(vrc_user, 'icon_url', None)
+                or getattr(vrc_user, 'current_avatar_thumbnail_image_url', None))
     if user.user_icon_url != icon_url:
         user.user_icon_url = icon_url
     db.session.add(user)
@@ -48,7 +51,7 @@ def get_user_by_display_name(display_name: str) -> Union[User, None]:
 @shared_task(ignore_result=False)
 def load_user(user_name: str) -> Union[uuid.UUID, None]:
     vrc: VRCAPI = app.extensions["vrc"]
-    vrc_user: LimitedUser = vrc.get_user(user_name)
+    vrc_user: UserResponse = vrc.get_user(user_name)
     if not vrc_user:
         return None
     user = upsert_user(vrc_user)
